@@ -6,15 +6,6 @@ import heapq
 class InMemoryUserStore:
     """
     Demo amaçlı basit in-memory kullanıcı deposu.
-    user_data yapısı:
-    {
-      user_id: {
-        "score": int,
-        "streak": int,
-        "badges": [str,...],
-        "last_active": timestamp
-      }
-    }
     """
 
     def __init__(self):
@@ -41,10 +32,9 @@ class InMemoryUserStore:
 
     def get_leaderboard(self, top_n: int = 10) -> List[Dict]:
         """
-        Basit top-N leaderboard. Daha hızlı sorgular için prod-da DB sorgusu kullan.
+        Basit top-N leaderboard.
         """
         items = [(v["score"], uid) for uid, v in self.user_data.items()]
-        # en yüksekten sırala
         top = heapq.nlargest(top_n, items)
         return [{"user_id": uid, "score": score, "streak": self.user_data[uid]["streak"]} for score, uid in top]
 
