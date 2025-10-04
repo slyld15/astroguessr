@@ -1,7 +1,7 @@
 # score_services.py
 from typing import Dict, Any
-from data_loader import get_lightcurve
-from user_store import InMemoryUserStore
+from dataset_model import get_lightcurve
+from user_model import InMemoryUserStore
 from model_wrapper import ModelWrapper
 
 # Levels
@@ -119,3 +119,4 @@ class ScoreService:
             "total_correct": int(final_user.get("total_correct", 0)),
         }
         return result
+
