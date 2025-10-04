@@ -1,4 +1,5 @@
-python-dotenv
-sqlalchemy
-passlib[bcrypt]
-pyjwt
+Flask==2.3.3
+python-dotenv==1.0.0
+SQLAlchemy==2.0.20
+passlib[bcrypt]==1.7.5
+PyJWT==2.9.0
