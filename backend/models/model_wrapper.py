@@ -6,31 +6,20 @@ import joblib
 import os
 
 class ModelWrapper:
-    """
-    Çok basit bir wrapper:
-    - predict_proba(line) gibi tek-birim tahminler,
-    - partial_fit ile insan etiketleri geldikçe güncelleme (online learning)
-    Not: küçük demo veri için SGDClassifier uygun; productionda değiştirilir.
-    """
 
     def __init__(self, classes=(0,1), model_path: str | None = None):
         self.classes = classes
         self.model_path = model_path
-        # SGDClassifier ile online eğitim desteği var
         self.model = SGDClassifier(loss='log', max_iter=1000, tol=1e-3)
-        # model'u ilk kez eğitmemişsek partial_fit çağrılana kadar hata verebileceği için None bırakıyoruz.
         self._initialized = False
 
-        # Eğer model dosyası varsa yükle
         if model_path and os.path.exists(model_path):
             self.model = joblib.load(model_path)
             self._initialized = True
 
     def featurize(self, time: Sequence[float], flux: Sequence[float], index: int) -> List[float]:
         """
-        Tek bir nokta için özellik üretir. Burada çok basit: flux değeri ve komşu farkları.
-        - index: tıklanan örneğin index'i
-        Dönen vektör: [flux[index], flux[index]-flux[index-1], flux[index+1]-flux[index], local_std]
+        Tek bir nokta için özellik üretir.
         """
         arr = np.array(flux)
         n = len(arr)
@@ -66,6 +55,5 @@ class ModelWrapper:
             self._initialized = True
         else:
             self.model.partial_fit(x, y)
-        # opsiyonel: modeli diske kaydet
         if self.model_path:
             joblib.dump(self.model, self.model_path)
