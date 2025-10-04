@@ -4,17 +4,14 @@ from model_wrapper import ModelWrapper
 from user_model import InMemoryUserStore
 from dataset_model import get_lightcurve
 
-# Seviye eşiği tablosu (istediğin gibi genişlet)
+# Levels chart
 LEVELS = [
-    ("Çırak Kaşif", 0),
-    ("Sertifikalı Avcı", 500),
-    ("Lonca Üstadı", 2500),
+    ("Beginner", 0),
+    ("Apprentice", 500),
+    ("Master", 2500),
 ]
 
 def compute_level(score: int) -> str:
-    """
-    Basit: en yüksek eşik geçildiğinde o seviye verilir.
-    """
     cur = LEVELS[0][0]
     for name, thresh in LEVELS:
         if score >= thresh:
@@ -22,12 +19,6 @@ def compute_level(score: int) -> str:
     return cur
 
 class GameEngine:
-    """
-    Oyun mantığını yöneten sınıf.
-    - model: ModelWrapper örneği
-    - store: InMemoryUserStore veya DB adaptörü
-    - dataset: data_loader.load_csv_dataset tarafından sağlanan dict
-    """
 
     def __init__(self, model: ModelWrapper, store: InMemoryUserStore, dataset: Dict[int, Dict]):
         self.model = model
@@ -45,50 +36,37 @@ class GameEngine:
         return bool(lc["label"][click_index])
 
     def process_guess(self, user_id: str, lc_id: int, click_index: int) -> Dict:
-        """
-        Kullanıcı bir yer tıkladığında çağrılacak ana fonksiyon.
-        - is_correct: doğru/taklit
-        - ai_prediction: modelin transit olasılığı (0..1)
-        - new_score, streak, level: güncel kullanıcı durumu
-        Adım adım:
-          1) label kontrolü
-          2) model tahmini al
-          3) kullanıcıya puan ver/ceza uygula
-          4) modeli partial_fit ile güncelle (human-in-the-loop)
-        """
-        # 1) tahmin/prob
+        # 1) guessing
         lc = get_lightcurve(self.dataset, lc_id)
         ai_prob = self.model.predict_proba(lc["time"], lc["flux"], click_index)
         ai_pred = 1 if ai_prob >= 0.5 else 0
 
-        # 2) doğru/yanlış kontrolü
+        # 2) right/wrong control
         is_correct = self.check_label(lc_id, click_index)
 
-        # 3) kullanıcı durumunu güncelle
+        # 3) update user status
         user = self.store.get_user(user_id)
         if is_correct:
             user['streak'] += 1
-            gained = 10 * user['streak']   # base_points=10, çarpan: streak
+            gained = 10 * user['streak']   # base_points=10, multiplier: streak
             self.store.increment_score(user_id, gained)
         else:
             user['streak'] = 0
-            self.store.increment_score(user_id, -5)  # penalty 5 puan
-        # 4) seviye kontrolü
+            self.store.increment_score(user_id, -5)  # penalty 5 points
+        # 4) level control
         new_user = self.store.get_user(user_id)
         new_level = compute_level(new_user['score'])
-        # badge örneği: streak 7+ ise "Nadir Aday" badge
+        # example badge: if streak is at least 7, earn badge
         if new_user['streak'] >= 7:
-            self.store.award_badge(user_id, "Nadir Aday")
+            self.store.award_badge(user_id, "Rare Nominee")
 
-        # 5) ML modelini insan verisiyle güncelle
-        # Label integer 0/1 olmalı
+        # 5) Update ML model with human data
+        # Label integer must be 0/1
         label = 1 if is_correct else 0
         try:
             self.model.partial_fit(lc["time"], lc["flux"], click_index, label)
         except Exception as e:
-            # model güncellemesi başarısız olsa bile oyunun akışını bozma
-            # logger yerine print (basit demo)
-            print("Model güncellemesi hatası:", e)
+            print("Model update error:", e)
 
         result = {
             "is_correct": bool(is_correct),
@@ -98,4 +76,5 @@ class GameEngine:
             "level": new_level
         }
         return result
+
 
