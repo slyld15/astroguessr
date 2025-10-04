@@ -1,8 +1,8 @@
 # explorer_route.py
 from typing import Dict, Any, Optional
-from data_loader import sample_random_lc_id, get_lightcurve
+from dataset_model import sample_random_lc_id, get_lightcurve
 from model_wrapper import ModelWrapper
-from user_store import InMemoryUserStore
+from user_model import InMemoryUserStore
 from score_services import ScoreService
 
 
@@ -47,3 +47,4 @@ class ExplorerEngine:
         # but careful: after partial_fit the probability may change. If you want pre-update AI hint,
         # call get_ai_hint BEFORE submit_click in the route.
         return result
+
