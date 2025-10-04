@@ -1,8 +1,8 @@
 # game_logic.py
 from typing import Dict, Any
 from model_wrapper import ModelWrapper
-from user_store import InMemoryUserStore
-from data_loader import get_lightcurve
+from user_model import InMemoryUserStore
+from dataset_model import get_lightcurve
 
 # Seviye eşiği tablosu (istediğin gibi genişlet)
 LEVELS = [
@@ -98,3 +98,4 @@ class GameEngine:
             "level": new_level
         }
         return result
+
