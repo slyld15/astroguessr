@@ -34,10 +34,10 @@ class ModelWrapper:
         """1 sınıfı için olasılık döndürür (prob of transit)."""
         x = np.array(self.featurize(time, flux, index)).reshape(1, -1)
         if not self._initialized:
-            # model eğitilmediğinde default belirsiz olasılık 0.5 döndür
+            # return unidentified  0,5 when model is not trained
             return 0.5
         p = self.model.predict_proba(x)[0]
-        # p[1] transit olma olasılığı
+        # p[1] probability of being a transit
         return float(p[1])
 
     def predict(self, time, flux, index, threshold=0.5) -> int:
